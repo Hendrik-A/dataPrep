@@ -43,3 +43,6 @@ def main():
   os.system('rm -r ' + args.data_root + '/train')
   os.system('rm -r ' + args.data_root + '/val')
   os.system('rm -r ' + args.data_root + '/test')
+
+if __name__ == "__main__":
+  main()
