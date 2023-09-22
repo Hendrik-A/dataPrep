@@ -19,7 +19,6 @@ def main():
   args, unknown = read_args()
   
   conf = pyspark.SparkConf()
-  conf.set('spark.driver.memory', args.driver_memory)
   sc = pyspark.SparkContext(conf=conf)
   spark = pyspark.sql.SparkSession(sc)
 
