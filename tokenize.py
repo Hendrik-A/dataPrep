@@ -39,7 +39,7 @@ def main():
   df = test_df.union(spark.read.json(orig_val)).repartition(args.partitions, "article_id")
 
   df = df.withColumn("LEDtokens", count_LEDtokens_udf(F.concat_ws(" ", F.col("article_text")))).withColumn("PXtokens", count_PXtokens_udf(F.concat_ws(" ", F.col("article_text"))))
-  df.write.json(path=args.data_root, "counting", mode="overwrite")
+  df.write.json(path=os.path.join(args.data_root, "/counting"), mode="overwrite")
 
   os.system('cat ' + args.data_root + '/counting/part-* >' + args.data_root + '/countedTokens.txt')
   os.system('rm -r ' + args.data_root + '/counting')
