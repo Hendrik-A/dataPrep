@@ -22,6 +22,10 @@ def main():
   sc = pyspark.SparkContext(conf=conf)
   spark = pyspark.sql.SparkSession(sc)
 
+  log_dir = os.path.join(args.data_root, "logging")
+  if not os.path.exists(log_dir):
+    os.makedirs(log_dir)
+  log_file = os.path.join(log_dir, "log.txt")
   
   data_path = os.path.join(args.data_root, 'countedTokens.txt')
   df = spark.read.json(data_path)
@@ -29,9 +33,8 @@ def main():
   df = df.where(F.col('LEDtokens') <= 16384)
   df = df.where(F.col('PXtokens') <= 16384)
   df = df.orderBy(F.col('LEDtokens'), F.col('PXtokens'), ascending=False).limit(5000)
-
-  output_log = os.path.join(args.data_root, "logging/log.txt")
-  with open(output_log, "a+") as writer:
+  
+  with open(log_file, "a+") as writer:
     wrier.write("------Unsplitted data statistics------\n")
     writer.write("Total entries:", df.count())
     writer.write("avg LED tokens:",  df.select(F.avg(df['LEDtokens'])).collect()[0][0], "\n")
@@ -56,7 +59,7 @@ def main():
   test_df.write.json(path=os.path.join(args.data_root, "test"), mode="overwrite")
   valid_df.write.json(path=os.path.join(args.data_root, "val"), mode="overwrite")
 
-  with open(output_log, "a+") as writer:
+  with open(log_file, "a+") as writer:
     writer.write("------Train statistics------\n")
     writer.write("Total entries:", train_df.count())
     writer.write("avg LED tokens:",  train_df.select(F.avg(train_df['LEDtokens'])).collect()[0][0], "\n")
