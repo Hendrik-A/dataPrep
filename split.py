@@ -2,6 +2,9 @@ import os
 import argparse
 
 import numpy as np
+import pandas as pd
+
+from transformers import AutoTokenizer
 
 import pyspark
 from pyspark.sql import functions as F
@@ -15,6 +18,8 @@ def read_args():
   args, unknown = parser.parse_known_args()
   return args, unknown
 
+
+
 def main():
   args, unknown = read_args()
   
@@ -22,8 +27,25 @@ def main():
   sc = pyspark.SparkContext(conf=conf)
   spark = pyspark.sql.SparkSession(sc)
 
+  LEDtokenizer = AutoTokenizer.from_pretrained("allenai/led-large-16384-arxiv")
+  PXtokenizer = AutoTokenizer.from_pretrained("google/pegasus-x-base")
+
+  def count_LEDtokens(text):
+    return LEDtokenizer.encode(text, return_tensors='pt').size()[1]
+  def count_PXtokens(text):
+    return PXtokenizer.encode(text, return_tensors='pt').size()[1]
+  
+  count_LEDtokens_udf = F.udf(count_LEDtokens, spark_types.IntegerType())
+  count_PXtokens_udf = F.udf(count_PXtokens, spark_types.IntegerType())
   orig_data = os.path.join(args.data_root, 'orig_test.txt')
-  df = spark.read.json(orig_data).orderBy(F.rand()).repartition(args.partitions, "article_id")
+  df = spark.read.json(orig_data).repartition(args.partitions, "article_id")
+
+
+  df = df.withColumn("LEDtokens", count_LEDtokens_udf(F.concat_ws(" ", F.col("article_text")))).withColumn("PXtokens", count_PXtokens_udf(F.concat_ws(" ", F.col("article_text"))))
+  df = df.where(F.col('LEDtokens') <= 16384)
+  df = df.where(F.col('PXtokens') <= 16384)
+  df = df.orderBy(F.rand())
+  
   rows = df.count()
 
   train_df = df.limit(round(rows*0.8))
