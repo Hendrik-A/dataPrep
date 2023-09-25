@@ -24,8 +24,8 @@ def main():
   spark = pyspark.sql.SparkSession(sc)
 
   output_dir = os.path.join(args.data_root, "counting")
-  if not os.path.exists(task_output_dir):
-    os.makedirs(task_output_dir)
+  if not os.path.exists(output_dir):
+    os.makedirs(output_dir)
 
   LEDtokenizer = AutoTokenizer.from_pretrained("allenai/led-large-16384-arxiv")
   PXtokenizer = AutoTokenizer.from_pretrained("google/pegasus-x-base")
