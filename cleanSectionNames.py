@@ -49,13 +49,13 @@ def main():
 
         print(f"Finished writing {prefix} split to {task_output_dir}")
 
-  os.system('cat ' + args.data_root + '/train/part-* >' + args.data_root + '/train.txt')
-  os.system('cat ' + args.data_root + '/val/part-* >' + args.data_root + '/val.txt')
-  os.system('cat ' + args.data_root + '/test/part-* >' + args.data_root + '/test.txt')
+    os.system('cat ' + args.data_root + '/train/part-* >' + args.data_root + '/train.txt')
+    os.system('cat ' + args.data_root + '/val/part-* >' + args.data_root + '/val.txt')
+    os.system('cat ' + args.data_root + '/test/part-* >' + args.data_root + '/test.txt')
 
-  os.system('rm -r ' + args.data_root + '/train')
-  os.system('rm -r ' + args.data_root + '/val')
-  os.system('rm -r ' + args.data_root + '/test')
+    os.system('rm -r ' + args.data_root + '/train')
+    os.system('rm -r ' + args.data_root + '/val')
+    os.system('rm -r ' + args.data_root + '/test')
 
 
 if __name__ == "__main__":
