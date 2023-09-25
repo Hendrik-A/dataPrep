@@ -28,7 +28,6 @@ def main():
     test_data = os.path.join(args.data_root, 'test.txt')
 
     conf = pyspark.SparkConf()
-    conf.set('spark.driver.memory', args.driver_memory)
     sc = pyspark.SparkContext(conf=conf)
     spark = pyspark.sql.SparkSession(sc)
 
