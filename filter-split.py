@@ -13,6 +13,11 @@ def read_args():
   args, unknown = parser.parse_known_args()
   return args, unknown
 
+def clean_section_names(sections):
+  cleaned = [None] * len(sections)
+  for i in range(len(sections)):
+    cleaned[i] = re.sub("\[sec\d*\]", "", sections[i])
+  return cleaned
 
 
 def main():
@@ -26,6 +31,8 @@ def main():
   if not os.path.exists(log_dir):
     os.makedirs(log_dir)
   log_file = os.path.join(log_dir, "log.txt")
+
+  clean_section_names_udf = F.udf(clean_section_names, spark_types.ArrayType(spark_types.StringType()))
   
   data_path = os.path.join(args.data_root, 'countedTokens.txt')
   df = spark.read.json(data_path)
@@ -33,6 +40,7 @@ def main():
   df = df.where(F.col('LEDtokens') <= 16384)
   df = df.where(F.col('PXtokens') <= 16384)
   df = df.orderBy(F.col('LEDtokens'), F.col('PXtokens'), ascending=False).limit(5000)
+  df = df.withColumn("section_names", clean_section_names_udf("section_names"))
   
   with open(log_file, "a+") as writer:
     writer.write("------Unsplitted data statistics------\n")
