@@ -41,7 +41,7 @@ def main():
         df = spark.read.json(data_path) \
             .repartition(args.partitions, "article_id")
 
-        df = df.withColumn("section_names", clean_section_names_udf("section_names")))
+        df = df.withColumn("section_names", clean_section_names_udf("section_names"))
 
         df.write.json(
             path=os.path.join(task_output_dir, prefix),
