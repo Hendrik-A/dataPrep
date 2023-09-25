@@ -23,6 +23,10 @@ def main():
   sc = pyspark.SparkContext(conf=conf)
   spark = pyspark.sql.SparkSession(sc)
 
+  output_dir = os.path.join(args.data_root, "counting")
+  if not os.path.exists(task_output_dir):
+    os.makedirs(task_output_dir)
+
   LEDtokenizer = AutoTokenizer.from_pretrained("allenai/led-large-16384-arxiv")
   PXtokenizer = AutoTokenizer.from_pretrained("google/pegasus-x-base")
 
@@ -39,10 +43,10 @@ def main():
   df = test_df.union(spark.read.json(orig_val)).repartition(args.partitions, "article_id")
 
   df = df.withColumn("LEDtokens", count_LEDtokens_udf(F.concat_ws(" ", F.col("article_text")))).withColumn("PXtokens", count_PXtokens_udf(F.concat_ws(" ", F.col("article_text"))))
-  df.write.json(path=os.path.join(args.data_root, "/counting"), mode="overwrite")
+  df.write.json(path=output_dir, mode="overwrite")
 
-  os.system('cat ' + args.data_root + '/counting/part-* >' + args.data_root + '/countedTokens.txt')
-  os.system('rm -r ' + args.data_root + '/counting')
+  os.system('cat ' + output_dir + '/part-* >' + args.data_root + '/countedTokens.txt')
+  os.system('rm -r ' + output_dir)
 
 if __name__ == "__main__":
   main()
