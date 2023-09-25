@@ -1,6 +1,5 @@
 import os
 import argparse
-import re
 
 import pyspark
 from pyspark.sql import functions as F
