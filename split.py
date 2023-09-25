@@ -1,9 +1,6 @@
 import os
 import argparse
 
-import numpy as np
-import pandas as pd
-
 from transformers import AutoTokenizer
 
 import pyspark
@@ -47,6 +44,7 @@ def main():
   df = df.orderBy(F.rand())
   
   rows = df.count()
+  print("remaining rows ", rows)
 
   train_df = df.limit(round(rows*0.8))
   valid_test_df = df.filter(~df["article_id"].isin(list(train_df.select(train_df.article_id).toPandas()['article_id'])))
