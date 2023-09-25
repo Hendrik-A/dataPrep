@@ -35,7 +35,7 @@ def main():
   df = df.orderBy(F.col('LEDtokens'), F.col('PXtokens'), ascending=False).limit(5000)
   
   with open(log_file, "a+") as writer:
-    wrier.write("------Unsplitted data statistics------\n")
+    writer.write("------Unsplitted data statistics------\n")
     writer.write("Total entries:", df.count())
     writer.write("avg LED tokens:",  df.select(F.avg(df['LEDtokens'])).collect()[0][0], "\n")
     writer.write("median LED tokens:", df.approxQuantile("LEDtokens", [0.5], 0), "\n")
