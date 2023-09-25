@@ -41,7 +41,7 @@ def main():
   df = df.where(F.col('LEDtokens') <= 16384)
   df = df.where(F.col('PXtokens') <= 16384)
   df = df.orderBy(F.col('LEDtokens'), F.col('PXtokens'), ascending=False).limit(5000)
-  df = df.withColumn("section_names", clean_section_names_udf("section_names"))
+  #df = df.withColumn("section_names", clean_section_names_udf("section_names"))
   
   with open(log_file, "a+") as writer:
     writer.write("------Unsplitted data statistics------\n")
