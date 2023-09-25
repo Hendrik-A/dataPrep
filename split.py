@@ -34,17 +34,32 @@ def main():
   
   count_LEDtokens_udf = F.udf(count_LEDtokens, spark_types.IntegerType())
   count_PXtokens_udf = F.udf(count_PXtokens, spark_types.IntegerType())
-  orig_data = os.path.join(args.data_root, 'orig_test.txt')
-  df = spark.read.json(orig_data).repartition(args.partitions, "article_id")
-
+  orig_test = os.path.join(args.data_root, 'test.txt')
+  orig_val = os.path.join(args.data_root, 'val.txt')
+  test_df = spark.read.json(orig_test)
+  df = test_df.union(spark.read.json(orig_val)).repartition(args.partitions, "article_id")
 
   df = df.withColumn("LEDtokens", count_LEDtokens_udf(F.concat_ws(" ", F.col("article_text")))).withColumn("PXtokens", count_PXtokens_udf(F.concat_ws(" ", F.col("article_text"))))
   df = df.where(F.col('LEDtokens') <= 16384)
   df = df.where(F.col('PXtokens') <= 16384)
-  df = df.orderBy(F.rand())
+  df = df.orderBy(F.col('LEDtokens'), F.col('PXtokens'), ascending=False).limit(5000)
+
+  output_log = os.path.join(args.data_root, "logging/log.txt")
+  with open(output_log, "a+") as writer:
+    wrier.write("------Unsplitted data------\n")
+    writer.write("Total entries:", df.count())
+    writer.write("avg LED tokens:",  df.select(F.avg(df['LEDtokens'])).collect()[0][0], "\n")
+    writer.write("median LED tokens:", df.approxQuantile("LEDtokens", [0.5], 0), "\n")
+    writer.write("min LED tokens:",  df.select(F.min(df['LEDtokens'])).collect()[0][0], "\n")
+    writer.write("max LED tokens:",  df.select(F.max(df['LEDtokens'])).collect()[0][0], "\n")
+    writer.write("avg Pegasus-X tokens:",  df.select(F.avg(df['PXtokens'])).collect()[0][0], "\n")
+    writer.write("median LED tokens:", df.approxQuantile("LEDtokens", [0.5], 0), "\n")
+    writer.write("median Pegasus-X tokens:", df.approxQuantile("PXtokens", [0.5], 0), "\n")
+    writer.write("min Pegasus-X tokens:",  df.select(F.min(df['PXtokens'])).collect()[0][0], "\n")
+    writer.write("max Pegasus-X tokens:",  df.select(F.max(df['PXtokens'])).collect()[0][0], "\n")
   
+  df = df.orderBy(F.rand())
   rows = df.count()
-  print("remaining rows ", rows)
 
   train_df = df.limit(round(rows*0.8))
   valid_test_df = df.filter(~df["article_id"].isin(list(train_df.select(train_df.article_id).toPandas()['article_id'])))
