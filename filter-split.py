@@ -45,7 +45,7 @@ def section_match(keywords):
                 except KeyError:
                     continue
         return 1 if match else 0
-    return F.udf(section_test_, spark_types.ByteType())
+    return F.udf(section_match_, spark_types.ByteType())
   
 def read_args():
   parser = argparse.ArgumentParser()
