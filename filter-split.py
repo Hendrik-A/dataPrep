@@ -90,17 +90,12 @@ def main():
     writer.write("min Pegasus-X tokens:"+str(df.select(F.min(df['PXtokens'])).collect()[0][0])+"\n")
     writer.write("max Pegasus-X tokens:"+str(df.select(F.max(df['PXtokens'])).collect()[0][0])+"\n")
   
-  df = df.drop("LEDtokens", "PXtokens").orderBy(F.rand())
   rows = df.count()
 
   train_df = df.limit(round(rows*0.8))
   valid_test_df = df.filter(~df["article_id"].isin(list(train_df.select(train_df.article_id).toPandas()['article_id'])))
   valid_df = valid_test_df.limit(round(valid_test_df.count()*0.5))
   test_df = valid_test_df.filter(~valid_test_df["article_id"].isin(list(valid_df.select(train_df.article_id).toPandas()['article_id'])))
-
-  train_df.write.json(path=os.path.join(args.data_root, "train"), mode="overwrite")
-  test_df.write.json(path=os.path.join(args.data_root, "test"), mode="overwrite")
-  valid_df.write.json(path=os.path.join(args.data_root, "val"), mode="overwrite")
 
   with open(log_file, "a+") as writer:
     writer.write("------Train statistics------\n")
@@ -138,7 +133,14 @@ def main():
     writer.write("median Pegasus-X tokens:"+str(test_df.approxQuantile("PXtokens", [0.5], 0))+"\n")
     writer.write("min Pegasus-X tokens:"+str(test_df.select(F.min(test_df['PXtokens'])).collect()[0][0])+"\n")
     writer.write("max Pegasus-X tokens:"+str(test_df.select(F.max(test_df['PXtokens'])).collect()[0][0])+"\n")
-    
+
+  train_df.drop("LEDtokens", "PXtokens")
+  test_df.drop("LEDtokens", "PXtokens")
+  valid_df.drop("LEDtokens", "PXtokens")
+  train_df.write.json(path=os.path.join(args.data_root, "train"), mode="overwrite")
+  test_df.write.json(path=os.path.join(args.data_root, "test"), mode="overwrite")
+  valid_df.write.json(path=os.path.join(args.data_root, "val"), mode="overwrite")
+
   os.system('cat ' + args.data_root + '/train/part-* >' + args.data_root + '/train.txt')
   os.system('cat ' + args.data_root + '/val/part-* >' + args.data_root + '/val.txt')
   os.system('cat ' + args.data_root + '/test/part-* >' + args.data_root + '/test.txt')
