@@ -17,7 +17,10 @@ def read_args():
 def clean_section_names(sections):
   cleaned = [None] * len(sections)
   for i in range(len(sections)):
-    cleaned[i] = re.sub("\[sec\d*\]", "", sections[i])
+    tmp = re.sub("\[sec\d*\]", "", sections[i])
+    tmp = re.sub("\[sec:level\d*\]", "", tmp)
+    tmp = re.sub("\*", "", tmp)
+    cleaned[i] = tmp
   return cleaned
 
 def main():
