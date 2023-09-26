@@ -5,6 +5,48 @@ import pyspark
 from pyspark.sql import functions as F
 from pyspark.sql import types as spark_types
 
+KEYWORDS = {
+    'introduction': 'i',
+    'case': 'i',
+    'purpose': 'i',
+    'objective': 'i',
+    'objectives': 'i',
+    'aim': 'i',
+    'summary': 'i',
+    'findings': 'l',
+    'background': 'i',
+    'background/aims': 'i',
+    'literature': 'l',
+    'studies': 'l',
+    'related': 'l',
+    'methods': 'm',
+    'method': 'm',
+    'techniques': 'm',
+    'methodology': 'm',
+    'results': 'r',
+    'result': 'r',
+    'experiment': 'r',
+    'experiments': 'r',
+    'experimental': 'r',
+    'discussion': 'c',
+    'limitations': 'd',
+    'conclusion': 'c',
+    'conclusions': 'c',
+    'concluding': 'c'}
+
+def section_match(keywords):
+    def section_match_(sections):
+        match = False
+        for section in sections:
+            section = section.lower().split()
+            for wrd in section:
+                try:
+                    match = KEYWORDS[wrd]
+                except KeyError:
+                    continue
+        return 1 if match else 0
+    return F.udf(section_test_, spark_types.ByteType())
+  
 def read_args():
   parser = argparse.ArgumentParser()
   parser.add_argument("--data_root", type=str, help="")
@@ -24,12 +66,14 @@ def main():
   if not os.path.exists(log_dir):
     os.makedirs(log_dir)
   log_file = os.path.join(log_dir, "log.txt")
+  b_keywords = sc.broadcast(KEYWORDS)
   
   data_path = os.path.join(args.data_root, 'countedTokens.txt')
   df = spark.read.json(data_path).repartition(500, "article_id")
 
   df = df.where(F.col('LEDtokens') <= 16384)
   df = df.where(F.col('PXtokens') <= 16384)
+  df = df.withColumn('match', section_match(b_keywords)('section_names')).filter(df.match == True)
   df = df.orderBy(F.col('LEDtokens'), F.col('PXtokens'), ascending=False).limit(5000)
   
   with open(log_file, "a+") as writer:
@@ -45,7 +89,7 @@ def main():
     writer.write("min Pegasus-X tokens:"+str(df.select(F.min(df['PXtokens'])).collect()[0][0])+"\n")
     writer.write("max Pegasus-X tokens:"+str(df.select(F.max(df['PXtokens'])).collect()[0][0])+"\n")
   
-  df = df.orderBy(F.rand())
+  df = df.drop("LEDtokens", "PXtokens").orderBy(F.rand())
   rows = df.count()
 
   train_df = df.limit(round(rows*0.8))
