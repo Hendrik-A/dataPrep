@@ -73,7 +73,8 @@ def main():
 
   df = df.where(F.col('LEDtokens') <= 16384)
   df = df.where(F.col('PXtokens') <= 16384)
-  df = df.withColumn('match', section_match(b_keywords)('section_names')).filter(df.match == True)
+  df = df.withColumn('match', section_match(b_keywords)('section_names'))
+  df = df.filter(df.match == True)
   df = df.orderBy(F.col('LEDtokens'), F.col('PXtokens'), ascending=False).limit(5000)
   
   with open(log_file, "a+") as writer:
