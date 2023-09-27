@@ -34,6 +34,15 @@ KEYWORDS = {
     'conclusions': 'c',
     'concluding': 'c'}
 
+def clean_section_names(sections):
+  cleaned = [None] * len(sections)
+  for i in range(len(sections)):
+    tmp = re.sub("\[sec\d*\]", "", sections[i])
+    tmp = re.sub("\[sec:level\d*\]", "", tmp)
+    tmp = re.sub("\*", "", tmp)
+    cleaned[i] = tmp
+  return cleaned
+
 def section_match(keywords):
     def section_match_(sections):
         match = False
@@ -62,6 +71,8 @@ def main():
   sc = pyspark.SparkContext(conf=conf)
   spark = pyspark.sql.SparkSession(sc)
 
+  clean_section_names_udf = F.udf(clean_section_names, spark_types.ArrayType(spark_types.StringType()))
+
   b_keywords = sc.broadcast(KEYWORDS)
   
   data_path = os.path.join(args.data_root, 'countedTokens.txt')
@@ -69,6 +80,7 @@ def main():
 
   df = df.where(F.col('LEDtokens') <= 16384)
   df = df.where(F.col('PXtokens') <= 16384)
+  df = df.withColumn('section_names', clean_section_names_udf('section_names'))
   df = df.withColumn('match', section_match(b_keywords)('section_names'))
   df = df.filter(df.match == True)
   df = df.orderBy(F.col('LEDtokens'), F.col('PXtokens'), ascending=False).limit(5000).drop("LEDtokens", "PXtokens").orderBy(F.rand())
