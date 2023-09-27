@@ -15,6 +15,7 @@ def read_args():
   parser = argparse.ArgumentParser()
   parser.add_argument("--data_root", type=str, help="")
   parser.add_argument("--file", type=str, help="")
+  parser.add_argument("--type", type=str, help="")
   parser.add_argument("--text_col", type=str)
   parser.add_argument("--sum_col", type=str)
   
@@ -27,7 +28,7 @@ def main():
   result_dir = os.path.join(args.data_root, "analysis")
   if not os.path.exists(result_dir):
     os.makedirs(result_dir)
-  result_file = os.path.join(result_dir, 'analysis_'+args.file)
+  result_file = os.path.join(result_dir, 'analysis_'+args.type+'_'+args.file)
 
   df = pd.read_json(os.path.join(args.data_root, args.file), lines=True)
 
