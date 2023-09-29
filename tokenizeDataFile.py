@@ -54,7 +54,7 @@ def main():
   df = test_df.union(spark.read.json(orig_val)).repartition(args.partitions, "article_id")
 
   df = df.withColumn("section_names", clean_section_names_udf("section_names"))
-  df = df.withColumn("LEDtextT", count_LEDtokens_udf(F.concat_ws(" ", F.col("article_text")))).withColumn("PXtextT", count_PXtokens_udf(F.concat_ws(" ", F.col("article_text")))) \
+  df = df.withColumn("LEDtextT", count_LEDtokens_udf(F.concat_ws(" ", F.col("article_text")))).withColumn("PXtextT", count_PXtokens_udf(F.concat_ws(" ", F.col("article_text"))))
 
   df.write.json(path=output_dir, mode="overwrite")
 
