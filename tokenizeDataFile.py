@@ -109,7 +109,7 @@ def main():
   df = df.where(F.col("LEDtextT") <= 16384)
   df = df.where(F.col("PXtextT") <= 16384)
   df = df.withColumn("match", section_match(b_keywords)("section_names")).where(F.col("match") == True)
-  df = df.orderBy(F.col("LEDtokens"), F.col("PXtokens"), ascending=False).limit(5000).drop("LEDtokens", "PXtokens").orderBy(F.rand())
+  df = df.orderBy(F.col("LEDtextT"), F.col("PXtextT"), ascending=False).limit(5000).drop("LEDtextT", "LEDabsT", "PXtextT", "PXabsT").orderBy(F.rand())
   
   df.write.json(path=output_dir, mode="overwrite")
 
