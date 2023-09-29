@@ -37,8 +37,6 @@ def main():
   if not os.path.exists(output_dir):
     os.makedirs(output_dir)
 
-  b_keywords = sc.broadcast(KEYWORDS)
-
   LEDtokenizer = AutoTokenizer.from_pretrained("allenai/led-base-16384")
   PXtokenizer = AutoTokenizer.from_pretrained("google/pegasus-x-base")
 
