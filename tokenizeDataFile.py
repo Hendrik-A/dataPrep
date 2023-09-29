@@ -8,35 +8,6 @@ import pyspark
 from pyspark.sql import functions as F
 from pyspark.sql import types as spark_types
 
-KEYWORDS = {
-    'introduction': 'i',
-    'case': 'i',
-    'purpose': 'i',
-    'objective': 'i',
-    'objectives': 'i',
-    'aim': 'i',
-    'summary': 'i',
-    'findings': 'l',
-    'background': 'i',
-    'background/aims': 'i',
-    'literature': 'l',
-    'studies': 'l',
-    'related': 'l',
-    'methods': 'm',
-    'method': 'm',
-    'techniques': 'm',
-    'methodology': 'm',
-    'results': 'r',
-    'result': 'r',
-    'experiment': 'r',
-    'experiments': 'r',
-    'experimental': 'r',
-    'discussion': 'c',
-    'limitations': 'd',
-    'conclusion': 'c',
-    'conclusions': 'c',
-    'concluding': 'c'}
-
 def clean_section_names(sections):
   cleaned = [None] * len(sections)
   for i in range(len(sections)):
@@ -45,20 +16,6 @@ def clean_section_names(sections):
     tmp = re.sub("\*", "", tmp)
     cleaned[i] = tmp
   return cleaned
-
-
-def section_match(keywords):
-    def section_match_(sections):
-        match = False
-        for section in sections:
-            section = section.lower().split()
-            for wrd in section:
-                try:
-                    match = KEYWORDS[wrd]
-                except KeyError:
-                    continue
-        return 1 if match else 0
-    return F.udf(section_match_, spark_types.ByteType())
 
 def read_args():
   parser = argparse.ArgumentParser()
@@ -82,7 +39,7 @@ def main():
 
   b_keywords = sc.broadcast(KEYWORDS)
 
-  LEDtokenizer = AutoTokenizer.from_pretrained("allenai/led-large-16384-arxiv")
+  LEDtokenizer = AutoTokenizer.from_pretrained("allenai/led-base-16384")
   PXtokenizer = AutoTokenizer.from_pretrained("google/pegasus-x-base")
 
   def count_LEDtokens(text):
@@ -98,19 +55,9 @@ def main():
   test_df = spark.read.json(orig_test)
   df = test_df.union(spark.read.json(orig_val)).repartition(args.partitions, "article_id")
 
-  df = df.withColumn("section_names", clean_section_names_udf("section_names")) \
-      .withColumn("cleaned_abstract", F.concat_ws(" ", F.col("abstract_text"))) \
-      .withColumn("cleaned_abstract", F.regexp_replace("cleaned_abstract", "<\/?S>", ""))
+  df = df.withColumn("section_names", clean_section_names_udf("section_names"))
   df = df.withColumn("LEDtextT", count_LEDtokens_udf(F.concat_ws(" ", F.col("article_text")))).withColumn("PXtextT", count_PXtokens_udf(F.concat_ws(" ", F.col("article_text")))) \
-      .withColumn("LEDabsT", count_LEDtokens_udf("cleaned_abstract")).withColumn("PXabsT", count_PXtokens_udf("cleaned_abstract"))
 
-  df = df.drop('cleaned_abstract')
-
-  df = df.where(F.col("LEDtextT") <= 16384)
-  df = df.where(F.col("PXtextT") <= 16384)
-  df = df.withColumn("match", section_match(b_keywords)("section_names")).where(F.col("match") == True)
-  df = df.orderBy(F.col("LEDtextT"), F.col("PXtextT"), ascending=False).limit(5000).drop("LEDtextT", "LEDabsT", "PXtextT", "PXabsT").orderBy(F.rand())
-  
   df.write.json(path=output_dir, mode="overwrite")
 
   os.system("cat " + output_dir + "/part-* >" + args.data_root + "/countedTokens.txt")
