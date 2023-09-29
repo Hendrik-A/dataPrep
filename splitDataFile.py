@@ -20,7 +20,7 @@ def main():
   sc = pyspark.SparkContext(conf=conf)
   spark = pyspark.sql.SparkSession(sc)
   
-  data_path = os.path.join(args.data_root, 'countedTokens.txt')
+  data_path = os.path.join(args.data_root, 'selectedSamples.txt')
   df = spark.read.json(data_path).repartition(500, "article_id")
 
   train_df = df.limit(round(df.count()*0.8))
