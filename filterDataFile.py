@@ -59,14 +59,18 @@ def read_args():
 
 def main():
   args, unknown = read_args()
-  
+
+  output_dir = os.path.join(args.data_root, "filter")
+  if not os.path.exists(output_dir):
+    os.makedirs(output_dir)
+      
   conf = pyspark.SparkConf()
   sc = pyspark.SparkContext(conf=conf)
   spark = pyspark.sql.SparkSession(sc)
 
   b_keywords = sc.broadcast(KEYWORDS)
 
-  df = spark.read.json(args.data_root, "countedTokens.txt").repartition(args.partitions, "article_id")
+  df = spark.read.json(os.path.join(args.data_root, "countedTokens.txt")).repartition(args.partitions, "article_id")
 
   df = df.where(F.col("LEDtextT") <= 16384)
   df = df.where(F.col("PXtextT") <= 16384)
