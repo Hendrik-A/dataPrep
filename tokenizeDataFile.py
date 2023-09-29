@@ -99,7 +99,7 @@ def main():
 
   df = df.withColumn("section_names", clean_section_names_udf("section_names")) \
       .withColumn("cleaned_abstract", F.concat_ws(" ", F.col("abstract_text"))) \
-      .withColumn("cleaned_abstract", F.regexp_replace("cleaned_abstract", "<\/?S>", "")) \
+      .withColumn("cleaned_abstract", F.regexp_replace("cleaned_abstract", "<\/?S>", ""))
   df = df.withColumn("LEDtextT", count_LEDtokens_udf(F.concat_ws(" ", F.col("article_text")))).withColumn("PXtextT", count_PXtokens_udf(F.concat_ws(" ", F.col("article_text")))) \
       .withColumn("LEDabsT", count_LEDtokens_udf("cleaned_abstract")).withColumn("PXabsT", count_PXtokens_udf("cleaned_abstract"))
 
