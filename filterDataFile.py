@@ -66,7 +66,7 @@ def main():
 
   b_keywords = sc.broadcast(KEYWORDS)
 
-  df = spark.read.json(args.data_root, "CountedTokens.txt").repartition(args.partitions, "article_id")
+  df = spark.read.json(args.data_root, "countedTokens.txt").repartition(args.partitions, "article_id")
 
   df = df.where(F.col("LEDtextT") <= 16384)
   df = df.where(F.col("PXtextT") <= 16384)
