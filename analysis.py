@@ -65,6 +65,8 @@ def main():
  
   with open(result_file, "w+") as writer:
     writer.write("Total entries:"+str(df['article_id'].count())+"\n")
+    writer.write("Distinct article_ids:"+str(df['article_id'].nunique())+"\n")
+    
     writer.write("LED: Avg Summary Tokens:"+str(df['LEDsum'].mean())+"\n")
     writer.write("LED: Median Summary Tokens:"+str(df['LEDsum'].median())+"\n")
     writer.write("LED: Min Summary Tokens:"+str(df['LEDsum'].min())+"\n")
