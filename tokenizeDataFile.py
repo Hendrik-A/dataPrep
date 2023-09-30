@@ -11,10 +11,7 @@ from pyspark.sql import types as spark_types
 def clean_section_names(sections):
   cleaned = [None] * len(sections)
   for i in range(len(sections)):
-    tmp = re.sub("\[sec\d*\]", "", sections[i])
-    tmp = re.sub("\[sec:level\d*\]", "", tmp)
-    tmp = re.sub("\*", "", tmp)
-    cleaned[i] = tmp
+    cleaned[i] = re.sub("[\.,;:!\?\*\&\(\)\[\]\{\}\|\\"]", " ", sections[i])
   return cleaned
 
 def read_args():
