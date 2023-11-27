@@ -27,7 +27,7 @@ def main():
 	data_prefixes = ['train', 'val', 'test']
 	data_paths = [train_data, val_data, test_data]
 	
-	task_output_dir = os.path.join(args.data_root, "processed/simple")
+	task_output_dir = os.path.join(args.data_root, "processed/basic")
 	if not os.path.exists(task_output_dir):
 		os.makedirs(task_output_dir)
 
@@ -38,7 +38,7 @@ def main():
 	
 		df = df.drop("labels", "section_names", "sections")
 	
-		df = df.withColumn("abstract", F.concat_ws(" ", F.col("abstract_text"))).withColumn("abstract", F.regexp_replace("abstract", "<\/?S>", "")).drop("abstract_text").withColumn("article_text", F.concat_ws(" ", F.col("article_text")))
+		df = df.withColumn("abstract_text", F.concat_ws(" ", F.col("abstract_text"))).withColumn("article_text", F.concat_ws(" ", F.col("article_text")))
 
 		df.write.json(
 			path=os.path.join(task_output_dir, prefix),
